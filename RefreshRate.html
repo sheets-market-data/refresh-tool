@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/timepicker@1.11.14/jquery.timepicker.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div id="refresh">
+        <form class="form my-3" onsubmit="handleFormSubmit(this)">
+          <div class="form-group">
+            <label for="rate-select">Select a refresh rate<sup>1</sup></label>
+            <select id="rate-select" name="rate" class="form-control">
+              <option value="" selected>None</option>
+              <option value="1">Every minute</option>
+              <option value="5">Every 5 minutes</option>
+              <option value="15">Every 15 minutes</option>
+              <option value="30">Every 30 minutes</option>
+              <option value="60">Every hour</option>
+            </select>
+          </div>
+          <p>Select the time of the day to run<sup>2</sup></p>
+          <div class="form-group">
+            <div class="form-row">
+              <div class="col-5">
+                <input name="start" id="start" class="form-control" placeholder="Start" />
+              </div>
+              <div class="col-2 d-flex align-items-center text-center justify-content-center">to</div>
+              <div class="col-5">
+                <input name="end" id="end" class="form-control" placeholder="End" />
+              </div>
+            </div>
+            <div class="text-right">
+              <a href="#" onclick="clearTime(event)">Clear</a>
+            </div>
+          </div>
+          <div class="form-group">
+            <button id="submitFormButton" type="submit" class="btn btn-primary btn-block">
+              Select
+            </button>
+          </div>
+        </form>
+        <hr/>
+        <p class="muted small">
+          <sup>1</sup> The refresh rate is the frequency all Sheets Market Data add-on functions in your spreadsheet will be refreshed. This runs even if you close the spreadsheet. 
+          Also, be aware that the more frequent you refresh your spreadsheet, the more likely you might hit <a target="_blank" href="https://sheetsmarketdata.com/docs/getting-started/#quotas">quotas</a>. If you hit the quotas, try using <a target="_blank" href="https://sheetsmarketdata.com/docs/pro-features/#data-range">cell ranges</a>. If you are still hitting the quotas then choose a less frequent refresh rate or smaller time interval.
+        </p>
+        <p class="muted small">
+          <sup>2</sup> Time is in your spreadsheet's timezone (found in File > Spreadsheet settings). If a start and end time are set, the refresh will only occur between these times every day. Otherwise, if no time interval is set, it will run continuously. 
+        </p>
+      </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/timepicker@1.11.14/jquery.timepicker.min.js"></script>
+
+    <script>
+      function fetchRate() {
+        google.script.run.withSuccessHandler(updateRate).getCurrentRefreshRate();
+      }
+
+      function fetchTimes() {
+        google.script.run.withSuccessHandler(updateTimes).getRefreshRateTimes();
+      }
+
+      // Prevent forms from submitting.
+      function preventFormSubmit() {
+        var forms = document.querySelectorAll('form');
+        for (var i = 0; i < forms.length; i++) {
+          forms[i].addEventListener('submit', function(event) {
+            event.preventDefault();
+          });
+        }
+      }
+      window.addEventListener('load', preventFormSubmit);
+      window.addEventListener('load', fetchRate);
+      window.addEventListener('load', fetchTimes);
+
+      function updateRate(rate) {
+        document.getElementById('rate-select').value = rate;
+      }
+
+      function updateTimes(times) {
+        document.getElementById('start').value = times.start;
+        document.getElementById('end').value = times.end;
+      }
+
+      function onSuccess() {
+        google.script.host.close();
+      }
+
+      function handleFormSubmit(formObject) {
+        document.getElementById('submitFormButton').innerText = "Saving...";
+        document.getElementById('submitFormButton').disabled = true;
+        var rate = formObject.rate.value;
+        var start = formObject.start.value;
+        var end = formObject.end.value;
+        google.script.run.withSuccessHandler(onSuccess).createTimeTrigger(rate, start, end);
+      }
+
+      function clearTime(e) {
+        e.preventDefault();
+        document.getElementById('start').value = '';
+        document.getElementById('end').value = '';
+      }
+    </script>
+
+    <script>
+      $('#start').timepicker({ 'step': 15, 'scrollDefault': 'now', 'disableTextInput': true });
+      $('#end').timepicker({ 'step': 15, 'scrollDefault': 'now', 'disableTextInput': true });
+    </script>
+  </body>
+</html>
