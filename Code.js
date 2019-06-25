@@ -75,7 +75,13 @@ function createTimeTrigger(rate, start, end) {
       }
     }
   }
-  var newTrigger = ScriptApp.newTrigger('refresh').timeBased().everyMinutes(parseInt(rate)).create();
+  var newTrigger;
+  var minutes = parseInt(rate);
+  if (minutes == 60) {
+    newTrigger = ScriptApp.newTrigger('refresh').timeBased().everyHours(1).create();
+  } else {
+    newTrigger = ScriptApp.newTrigger('refresh').timeBased().everyMinutes(minutes).create();
+  }
   userProperties.setProperties({
     'REFRESH_TRIGGER': newTrigger.getUniqueId(),
     'REFRESH_TRIGGER_VALUE': rate,
